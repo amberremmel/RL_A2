@@ -16,7 +16,7 @@ from Helper import LearningCurvePlot, smooth
 def average_over_repetitions(n_repetitions, n_episodes=250,
                learning_rate=0.001, gamma=0.9, n_nodes=[64, 128],
                epsilon_max=0.5, epsilon_min=0.05, epsilon_decay=0.99,
-               ER_buffer=False, ER_size=100, n_update_TN = 10,
+               ER_buffer=False, ER_size=100, update_TN=False, n_update_TN = 10,
                render=False, smoothing_window=51):
 
     reward_results = np.empty([n_repetitions, n_episodes]) # Result array
@@ -26,7 +26,7 @@ def average_over_repetitions(n_repetitions, n_episodes=250,
         # rewards = q_learning(n_timesteps, learning_rate, gamma, policy, epsilon, temp, plot)
         rewards = q_learning(n_episodes, learning_rate, gamma, 
                n_nodes, epsilon_max, epsilon_min, epsilon_decay,
-               ER_buffer, ER_size, n_update_TN, render)
+               ER_buffer, ER_size, update_TN, n_update_TN, render)
         reward_results[rep] = rewards
         
     print('Running one setting takes {} minutes'.format((time.time()-now)/60))    
@@ -37,10 +37,10 @@ def average_over_repetitions(n_repetitions, n_episodes=250,
 def experiment():
     ####### Settings
     # Experiment    
-    n_repetitions = 2 #20
+    n_repetitions = 20
     smoothing_window = 21 #1001
 
-    n_episodes = 30 #500
+    n_episodes = 500
     gamma = 0.9
     learning_rate = 0.05
     
@@ -59,7 +59,8 @@ def experiment():
     # After how much episodes the target network will be updated
     # When value of 1 is chosen > same as if no target network is used
     # Because the target network will then be updated at every episode
-    n_update_TN = 1 #25
+    update_TN = False
+    n_update_TN = 25 
 
     # Plotting parameters
     render = False
@@ -72,7 +73,7 @@ def experiment():
     for learning_rate in learning_rates:
         learning_curve = average_over_repetitions(n_repetitions, n_episodes,
                    learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
-                   epsilon_decay, ER_buffer, ER_size, n_update_TN, render, 
+                   epsilon_decay, ER_buffer, ER_size, update_TN, n_update_TN, render, 
                    smoothing_window)
         Plot.add_curve(learning_curve,label=r'$\alpha$ = {} '.format(learning_rate))        
     Plot.save('dqn_result_alpha={}.png'.format(learning_rates))
@@ -85,7 +86,7 @@ def experiment():
     for gamma in gammas:
         learning_curve = average_over_repetitions(n_repetitions, n_episodes,
                    learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
-                   epsilon_decay, ER_buffer, ER_size, n_update_TN, render, 
+                   epsilon_decay, ER_buffer, ER_size, update_TN, n_update_TN, render, 
                    smoothing_window)
         Plot.add_curve(learning_curve,label=r'$\gamma$ = {} '.format(gamma))        
     Plot.save('dqn_result_gamma={}.png'.format(gammas))
@@ -98,7 +99,7 @@ def experiment():
     for epsilon_decay in epsilon_decays:
         learning_curve = average_over_repetitions(n_repetitions, n_episodes,
                    learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
-                   epsilon_decay, ER_buffer, ER_size, n_update_TN, render, 
+                   epsilon_decay, ER_buffer, ER_size, update_TN, n_update_TN, render, 
                    smoothing_window)
         Plot.add_curve(learning_curve,label=r'$\epsilon$-decay = {} '.format(epsilon_decay))        
     Plot.save('dqn_result_epsilon_decay={}.png'.format(epsilon_decays))
@@ -111,9 +112,9 @@ def experiment():
     for n_nodes in n_nodess:
         learning_curve = average_over_repetitions(n_repetitions, n_episodes,
                    learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
-                   epsilon_decay, ER_buffer, ER_size, n_update_TN, render, 
+                   epsilon_decay, ER_buffer, ER_size, update_TN, n_update_TN, render, 
                    smoothing_window)
-        Plot.add_curve(learning_curve,label='# layers = {} '.format(n_nodes))        
+        Plot.add_curve(learning_curve,label='# layers = {} '.format(len(n_nodes)))        
     Plot.save('dqn_result_n_layers={}.png'.format([len(n_nodes) for n_nodes in n_nodess]))    
     
 if __name__ == '__main__':

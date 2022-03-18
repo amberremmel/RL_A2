@@ -11,7 +11,7 @@ from collections import deque
 
 class DQN_agent:
 
-    def __init__(self, n_actions=2, n_nodes=[64, 128], learning_rate=0.05, gamma=0.95, ER_size=0):
+    def __init__(self, n_actions=2, n_nodes=[64, 128], learning_rate=0.05, gamma=0.95, ER_size=0, update_TN=False):
         """
         :param n_actions: Number of actions available to agent
         :param learning_rate: Learning rate of neural network
@@ -26,6 +26,7 @@ class DQN_agent:
         self.n_actions = n_actions
         self.n_nodes = n_nodes
         self.Q_model = self.make_q_model()
+        self.update_TN = update_TN
         self.target_network = keras.models.clone_model(self.Q_model)
         self.ER_buffer = None
         if ER_size > 0:
@@ -47,7 +48,10 @@ class DQN_agent:
             states.append(s)
             Gt = r
             if not done:
-                Gt += self.gamma * np.amax(self.target_network.predict(s_next)[0])
+                if self.update_TN:
+                    Gt += self.gamma * np.amax(self.target_network.predict(s_next)[0])
+                else:
+                    Gt += self.gamma * np.amax(self.Q_model.predict(s_next)[0])
             target = self.Q_model.predict(s)
             target[0][a] = Gt
             targets.append(target)
@@ -75,15 +79,20 @@ class DQN_agent:
 def q_learning(n_episodes=250,
                learning_rate=0.001, gamma=0.9, n_nodes=[64, 128],
                epsilon_max=0.5, epsilon_min=0.05, epsilon_decay=0.99,
-               ER_buffer=False, ER_size=100, n_update_TN = 10,
-               render=False):
+               ER_buffer=False, ER_size=100, update_TN=False, 
+               n_update_TN = 25, render=False):
     ''' runs a single repetition of q_learning
     Return: rewards, a vector with the observed rewards at each timestep '''
 
     epsilon = epsilon_max
-    if ER_buffer:
+    if ER_buffer and update_TN:
+        ER_batch = 50
+        agent = DQN_agent(gamma=gamma, learning_rate=learning_rate, ER_size=ER_size, update_TN=update_TN)
+    elif ER_buffer:
         ER_batch = 50
         agent = DQN_agent(gamma=gamma, learning_rate=learning_rate, ER_size=ER_size)
+    elif update_TN:
+        agent = DQN_agent(gamma=gamma, learning_rate=learning_rate, update_TN=update_TN)
     else:
         agent = DQN_agent(gamma=gamma, learning_rate=learning_rate)
     print(agent.Q_model)
@@ -105,8 +114,9 @@ def q_learning(n_episodes=250,
             episode.append((state, action, reward, next_state, done))
             rewards.append(reward)
             state = next_state
-        if i % n_update_TN == 0:
-            agent.update_target_network()
+        if update_TN:
+            if i % n_update_TN == 0:
+                agent.update_target_network()
         reward_per_episode.append(np.sum(rewards))
         print("episode: ", i, " score: ", reward_per_episode[-1], " Epsilon: ", epsilon)
         if ER_buffer:
@@ -142,6 +152,7 @@ def test():
     # After how much episodes the target network will be updated
     # When value of 1 is chosen > same as if no target network is used
     # Because the target network will then be updated at every episode
+    update_TN = True
     n_update_TN = 25
 
     # Plotting parameters
@@ -155,6 +166,7 @@ def test():
                          epsilon_decay=epsilon_decay,
                          ER_buffer=ER_buffer,
                          ER_size=ER_size,
+                         update_TN=update_TN,
                          n_update_TN = n_update_TN,
                          render=render)
     print("Obtained rewards: {}".format(rewards))
