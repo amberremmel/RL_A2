@@ -78,7 +78,7 @@ def experiment():
         Plot.add_curve(learning_curve,label=r'$\alpha$ = {} '.format(learning_rate))        
     Plot.save('dqn_result_alpha={}.png'.format(learning_rates))
     
-    learning_rate = 0.005
+    learning_rate = 0.05
 
     # Varying the discount parameter
     Plot = LearningCurvePlot(title = 'Deep Q-network') 
