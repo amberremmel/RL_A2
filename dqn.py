@@ -6,8 +6,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from collections import deque
-
-
+from Helper import softmax
 
 class DQN_agent:
 
@@ -34,11 +33,27 @@ class DQN_agent:
 
 
 
-    def select_action(self, s, epsilon=None):
-        if np.random.uniform() < epsilon:
-            return np.random.randint(low=0, high=self.n_actions)
-        else:
-            return np.argmax(self.Q_model.predict(s)[0])
+    def select_action(self, s, strategy, epsilon=None, temp=None):
+        if strategy == "epsilon":
+            if np.random.uniform() < epsilon:
+                return np.random.randint(low=0, high=self.n_actions)
+            else:
+                return np.argmax(self.Q_model.predict(s)[0])
+        elif strategy == 'softmax':
+            if temp is None:
+                raise KeyError("Provide a temperature")
+
+            x = self.Q_model.predict(s)
+            y = softmax(x, temp)
+            z = random.random()
+            for i, val in enumerate(y):
+                if z < val:
+                    a = i
+                    break
+                else:
+                    z -= val
+
+            return a
 
 
     def update(self, observations):
@@ -79,17 +94,17 @@ class DQN_agent:
 def q_learning(n_episodes=250,
                learning_rate=0.001, gamma=0.9, n_nodes=[64, 128],
                epsilon_max=0.5, epsilon_min=0.05, epsilon_decay=0.99,
-               ER_buffer=False, ER_size=100, update_TN=False, 
-               n_update_TN = 25, render=False):
+               temp=1, ER_buffer=False, ER_size=1000, ER_batch=50, update_TN=False, 
+               n_update_TN = 25, strategy="epsilon", render=False):
     ''' runs a single repetition of q_learning
     Return: rewards, a vector with the observed rewards at each timestep '''
 
     epsilon = epsilon_max
     if ER_buffer and update_TN:
-        ER_batch = 50
+        ER_batch = ER_batch
         agent = DQN_agent(gamma=gamma, learning_rate=learning_rate, ER_size=ER_size, update_TN=update_TN)
     elif ER_buffer:
-        ER_batch = 50
+        ER_batch = ER_batch
         agent = DQN_agent(gamma=gamma, learning_rate=learning_rate, ER_size=ER_size)
     elif update_TN:
         agent = DQN_agent(gamma=gamma, learning_rate=learning_rate, update_TN=update_TN)
@@ -108,7 +123,7 @@ def q_learning(n_episodes=250,
         while not done:
             if render:
                 env.render()
-            action = agent.select_action(state, epsilon=epsilon)
+            action = agent.select_action(state, strategy, epsilon=epsilon, temp=temp)
             next_state, reward, done, info = env.step(action)
             next_state = np.reshape(next_state, [1,4])
             episode.append((state, action, reward, next_state, done))
@@ -144,17 +159,23 @@ def test():
     epsilon_max = 0.8
     epsilon_min = 0.05
     epsilon_decay = 0.995
+    
+    temp = 1
 
     # Experience replay
     ER_buffer = True
-    ER_size = 200
+    ER_size = 1000
+    ER_batch = 50
     
     # After how much episodes the target network will be updated
     # When value of 1 is chosen > same as if no target network is used
     # Because the target network will then be updated at every episode
     update_TN = True
     n_update_TN = 25
-
+    
+    # Exploration strategy
+    strategy = "epsilon" #"softmax"
+    
     # Plotting parameters
     render = False
     rewards = q_learning(n_episodes=n_episodes,
@@ -164,10 +185,13 @@ def test():
                          epsilon_max=epsilon_max,
                          epsilon_min=epsilon_min,
                          epsilon_decay=epsilon_decay,
+                         temp = temp,
                          ER_buffer=ER_buffer,
                          ER_size=ER_size,
+                         ER_batch=ER_batch,
                          update_TN=update_TN,
                          n_update_TN = n_update_TN,
+                         strategy = "epsilon",
                          render=render)
     print("Obtained rewards: {}".format(rewards))
 
