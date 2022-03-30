@@ -8,6 +8,7 @@ from tensorflow.keras import layers
 from collections import deque
 from Helper import softmax
 
+
 class DQN_agent:
 
     def __init__(self, n_actions=2, n_nodes=[64, 128], learning_rate=0.05, gamma=0.95, ER_size=0, update_TN=False):
@@ -27,11 +28,10 @@ class DQN_agent:
         self.Q_model = self.make_q_model()
         self.update_TN = update_TN
         self.target_network = keras.models.clone_model(self.Q_model)
+        self.target_network.set_weights(self.Q_model.get_weights())
         self.ER_buffer = None
         if ER_size > 0:
             self.ER_buffer = deque(maxlen=ER_size)
-
-
 
     def select_action(self, s, strategy, epsilon=None, temp=None):
         if strategy == "epsilon":
@@ -55,7 +55,6 @@ class DQN_agent:
 
             return a
 
-
     def update(self, observations):
         states = []
         targets = []
@@ -78,7 +77,7 @@ class DQN_agent:
     def make_q_model(self):
         inputs = layers.Input(shape=(4,))
         layers_list = [inputs]
-        
+
         for i in range(len(self.n_nodes)):
             layers_list.append(layers.Dense(self.n_nodes[i], activation='sigmoid')(layers_list[i]))
 
@@ -86,16 +85,16 @@ class DQN_agent:
         model = keras.Model(inputs=inputs, outputs=output)
         model.compile(loss='mse', optimizer=tf.keras.optimizers.Adam(lr=self.learning_rate))
         return model
-    
+
     def update_target_network(self):
-        self.target_network = keras.models.clone_model(self.Q_model)
+        self.target_network.set_weights(self.Q_model.get_weights())
 
 
 def q_learning(n_episodes=250,
                learning_rate=0.001, gamma=0.9, n_nodes=[64, 128],
                epsilon_max=0.5, epsilon_min=0.05, epsilon_decay=0.99,
-               temp=1, ER_buffer=False, ER_size=1000, ER_batch=50, update_TN=False, 
-               n_update_TN = 25, strategy="epsilon", render=False):
+               temp=1, ER_buffer=False, ER_size=1000, ER_batch=50, update_TN=False,
+               n_update_TN=25, strategy="epsilon", render=False):
     ''' runs a single repetition of q_learning
     Return: rewards, a vector with the observed rewards at each timestep '''
 
@@ -111,7 +110,7 @@ def q_learning(n_episodes=250,
     else:
         agent = DQN_agent(gamma=gamma, learning_rate=learning_rate)
     print(agent.Q_model)
-    #model = agent.make_q_model()
+    # model = agent.make_q_model()
     reward_per_episode = []
     env = gym.make("CartPole-v1")
     for i in range(n_episodes):
@@ -125,7 +124,7 @@ def q_learning(n_episodes=250,
                 env.render()
             action = agent.select_action(state, strategy, epsilon=epsilon, temp=temp)
             next_state, reward, done, info = env.step(action)
-            next_state = np.reshape(next_state, [1,4])
+            next_state = np.reshape(next_state, [1, 4])
             episode.append((state, action, reward, next_state, done))
             rewards.append(reward)
             state = next_state
@@ -141,17 +140,16 @@ def q_learning(n_episodes=250,
         else:
             agent.update(episode)
         if epsilon > epsilon_min:
-            epsilon = epsilon*epsilon_decay
+            epsilon = epsilon * epsilon_decay
     env.close()
     return reward_per_episode
 
 
-
 def test():
     n_episodes = 500
-    gamma = 0.9
-    learning_rate = 0.005
-    
+    gamma = 1
+    learning_rate = 0.05
+
     # Hidden layers
     n_nodes = [64, 32]
 
@@ -159,23 +157,23 @@ def test():
     epsilon_max = 0.8
     epsilon_min = 0.05
     epsilon_decay = 0.995
-    
+
     temp = 1
 
     # Experience replay
-    ER_buffer = True
+    ER_buffer = False
     ER_size = 1000
     ER_batch = 50
-    
+
     # After how much episodes the target network will be updated
     # When value of 1 is chosen > same as if no target network is used
     # Because the target network will then be updated at every episode
     update_TN = True
     n_update_TN = 25
-    
+
     # Exploration strategy
-    strategy = "epsilon" #"softmax"
-    
+    strategy = "epsilon"  # "softmax"
+
     # Plotting parameters
     render = False
     rewards = q_learning(n_episodes=n_episodes,
@@ -185,13 +183,13 @@ def test():
                          epsilon_max=epsilon_max,
                          epsilon_min=epsilon_min,
                          epsilon_decay=epsilon_decay,
-                         temp = temp,
+                         temp=temp,
                          ER_buffer=ER_buffer,
                          ER_size=ER_size,
                          ER_batch=ER_batch,
                          update_TN=update_TN,
-                         n_update_TN = n_update_TN,
-                         strategy = "epsilon",
+                         n_update_TN=n_update_TN,
+                         strategy="epsilon",
                          render=render)
     print("Obtained rewards: {}".format(rewards))
 
