@@ -36,12 +36,12 @@ class DQN_agent:
             self.ER_buffer = deque(maxlen=ER_size)
 
     def select_action(self, s, strategy, epsilon=None, temp=None):
-		"""Select the action for a given state and strategy"""
-		
-		# Epsilon-greedy policy
+        """Select the action for a given state and strategy"""
+        
+        # Epsilon-greedy policy
         if strategy == "epsilon":
-			
-			# Take random value with probability epsilon
+            
+            # Take random value with probability epsilon
             if np.random.uniform() < epsilon:
                 return np.random.randint(low=0, high=self.n_actions)
                 
@@ -49,7 +49,7 @@ class DQN_agent:
             else:
                 return np.argmax(self.Q_model.predict(s)[0])
                 
-		# Boltzmann policy
+        # Boltzmann policy
         elif strategy == 'softmax':
             if temp is None:
                 raise KeyError("Provide a temperature")
@@ -67,8 +67,8 @@ class DQN_agent:
             return a
 
     def update(self, observations):
-		"""Update Q model"""
-		
+        """Update Q model"""
+        
         states = []
         targets = []
         for s, a, r, s_next, done in observations:
@@ -91,9 +91,9 @@ class DQN_agent:
         self.Q_model.fit(states, targets, epochs=1, verbose=0, shuffle=False)
 
     def make_q_model(self):
-		"""Construct the Q network with input, hidden and output layers"""
-		
-		# Make input layer
+        """Construct the Q network with input, hidden and output layers"""
+        
+        # Make input layer
         inputs = layers.Input(shape=(4,))
         layers_list = [inputs]
         
@@ -110,8 +110,8 @@ class DQN_agent:
         return model
 
     def update_target_network(self):
-		"""Target network will be updated with current Q network"""
-		
+        """Target network will be updated with current Q network"""
+        
         self.target_network.set_weights(self.Q_model.get_weights())
 
 
@@ -180,17 +180,17 @@ def q_learning(n_episodes=250,
             agent.update(episode)
         
         # Decrease epsilon if exploration strategy is annealing epsilon-greedy    
-        if strategy="epsilon" and epsilon_decay != 1:
-		    if epsilon > epsilon_min:
-		        epsilon = epsilon * epsilon_decay
+        if strategy=="epsilon" and epsilon_decay != 1:
+            if epsilon > epsilon_min:
+                epsilon = epsilon * epsilon_decay
             
     env.close()
     return reward_per_episode
 
 
 def test():
-	"""Test function which prints the obtained rewards for the parameters below"""
-	
+    """Test function which prints the obtained rewards for the parameters below"""
+    
     n_episodes = 500
     gamma = 1
     learning_rate = 0.05
