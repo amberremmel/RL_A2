@@ -71,7 +71,7 @@ class DQN_agent:
             targets.append(target)
         states = np.concatenate(states)
         targets = np.concatenate(targets)
-        self.Q_model.fit(states, targets, epochs=1, verbose=0)
+        self.Q_model.fit(states, targets, epochs=1, verbose=0, shuffle=False)
         pass
 
     def make_q_model(self):
