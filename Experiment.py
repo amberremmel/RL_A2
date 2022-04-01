@@ -37,7 +37,7 @@ def average_over_repetitions(n_repetitions, n_episodes=250,
 def experiment():
     ####### Settings
     # Experiment    
-    n_repetitions = 20
+    n_repetitions = 10
     smoothing_window = 21
 
     n_episodes = 1000
@@ -49,7 +49,7 @@ def experiment():
 
     # Exploration
     epsilon_max = 0.8
-    epsilon_min = 0.1#0.005
+    epsilon_min = 0.1
     epsilon_decay = 0.995
 
     temp = 1
@@ -61,7 +61,7 @@ def experiment():
     
     # After how much episodes the target network will be updated
     update_TN = False
-    n_update_TN = 10
+    n_update_TN = 5
     
     # Exploration strategy
     strategy = "epsilon"
@@ -71,18 +71,53 @@ def experiment():
     
     ####### Experiments
     
-    # DQN with TN and ER
-    Plot = LearningCurvePlot(title = 'Deep Q-network')
+    # DQN with TN and ER annealing epsilon greedy, epsilon greedy and softmax
+    Plot = LearningCurvePlot(title = 'Deep Q-network softmax')
     ER_buffer = True
     update_TN = True
-    ER_batchs = [64, 128]
-    for ER_batch in ER_batchs:
+    
+    # # annealing epsilon greedy
+    # strategy = "epsilon"
+    # learning_curve = average_over_repetitions(n_repetitions, n_episodes,
+               # learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
+               # epsilon_decay, temp, ER_buffer, ER_size, ER_batch, update_TN, n_update_TN, strategy, render, 
+               # smoothing_window)
+    # Plot.add_curve(learning_curve,label="Annealing epsilon greedy")
+    # Plot.save('dqn_result_TN_ER_exploration_strategy.png')
+    
+    # # epsilon greedy
+    # epsilon_max = 0.2
+    # epsilon_decay = 1
+    # learning_curve = average_over_repetitions(n_repetitions, n_episodes,
+               # learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
+               # epsilon_decay, temp, ER_buffer, ER_size, ER_batch, update_TN, n_update_TN, strategy, render, 
+               # smoothing_window)
+    # Plot.add_curve(learning_curve,label="Epsilon greedy (epsilon=0.2)")
+    # Plot.save('dqn_result_TN_ER_exploration_strategy.png')    
+    
+    # softmax
+    strategy = "softmax"
+    temps = [1, 1.5, 2, 3, 5]
+    for temp in temps:
         learning_curve = average_over_repetitions(n_repetitions, n_episodes,
                learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
                epsilon_decay, temp, ER_buffer, ER_size, ER_batch, update_TN, n_update_TN, strategy, render, 
                smoothing_window)
-        Plot.add_curve(learning_curve,label="DQN with ER and TN (b={})".format(ER_batch))
-    Plot.save('dqn_result_TN_ER_b={}.png'.format(ER_batchs))
+        Plot.add_curve(learning_curve,label="temp={}".format(temp))
+        Plot.save('dqn_result_TN_ER_softmax_temp={}.png'.format(temps))
+    
+    # # DQN with TN and ER
+    # Plot = LearningCurvePlot(title = 'Deep Q-network')
+    # ER_buffer = True
+    # update_TN = True
+    # ER_batchs = [64, 128]
+    # for ER_batch in ER_batchs:
+        # learning_curve = average_over_repetitions(n_repetitions, n_episodes,
+               # learning_rate, gamma, n_nodes,epsilon_max, epsilon_min, 
+               # epsilon_decay, temp, ER_buffer, ER_size, ER_batch, update_TN, n_update_TN, strategy, render, 
+               # smoothing_window)
+        # Plot.add_curve(learning_curve,label="DQN with ER and TN (b={})".format(ER_batch))
+    # Plot.save('dqn_result_TN_ER_b={}.png'.format(ER_batchs))
     
     # # DQN with(out) TN and ER
     # Plot = LearningCurvePlot(title = 'Deep Q-network')
