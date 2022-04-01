@@ -11,7 +11,7 @@ from Helper import softmax
 
 class DQN_agent:
 
-    def __init__(self, n_actions=2, n_nodes=[64, 128], learning_rate=0.05, gamma=0.95, ER_size=0, update_TN=False):
+    def __init__(self, n_actions=2, n_nodes=[32, 16], learning_rate=0.05, gamma=1, ER_size=0, update_TN=False):
         """
         :param n_actions: Number of actions available to agent
         :param n_nodes: Number of nodes in hidden layers
@@ -40,8 +40,12 @@ class DQN_agent:
 		
 		# Epsilon-greedy policy
         if strategy == "epsilon":
+			
+			# Take random value with probability epsilon
             if np.random.uniform() < epsilon:
                 return np.random.randint(low=0, high=self.n_actions)
+                
+            # Take best Q network value
             else:
                 return np.argmax(self.Q_model.predict(s)[0])
                 
@@ -49,7 +53,7 @@ class DQN_agent:
         elif strategy == 'softmax':
             if temp is None:
                 raise KeyError("Provide a temperature")
-
+            
             x = self.Q_model.predict(s)[0]
             y = softmax(x, temp)
             z = random.random()
@@ -112,10 +116,10 @@ class DQN_agent:
 
 
 def q_learning(n_episodes=250,
-               learning_rate=0.001, gamma=0.9, n_nodes=[64, 128],
-               epsilon_max=0.5, epsilon_min=0.05, epsilon_decay=0.99,
-               temp=1, ER_buffer=False, ER_size=1000, ER_batch=50, update_TN=False,
-               n_update_TN=25, strategy="epsilon", render=False):
+               learning_rate=0.05, gamma=1, n_nodes=[32, 16],
+               epsilon_max=0.8, epsilon_min=0.1, epsilon_decay=0.995,
+               temp=1, ER_buffer=False, ER_size=1000, ER_batch=128, update_TN=False,
+               n_update_TN=5, strategy="epsilon", render=False):
     ''' runs a single repetition of q_learning
     Return: rewards, a vector with the observed rewards at each timestep '''
 
@@ -135,7 +139,10 @@ def q_learning(n_episodes=250,
     print(agent.Q_model)
     
     reward_per_episode = []
+    
+    # Make the CartPole environment
     env = gym.make("CartPole-v1")
+    
     for i in range(n_episodes):
         rewards = []
         state = env.reset()
@@ -189,23 +196,23 @@ def test():
     learning_rate = 0.05
 
     # Hidden layers
-    n_nodes = [64, 32]
+    n_nodes = [32, 16]
 
     # Exploration
     epsilon_max = 0.8
-    epsilon_min = 0.05
+    epsilon_min = 0.1
     epsilon_decay = 0.995
 
     temp = 1
 
     # Experience replay
     ER_buffer = False
-    ER_size = 1000
-    ER_batch = 50
+    ER_size = 5000
+    ER_batch = 128
 
     # The update frequency of the target network
     update_TN = True
-    n_update_TN = 25
+    n_update_TN = 5
 
     # Exploration strategy
     strategy = "epsilon"  # "softmax"
