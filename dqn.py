@@ -169,8 +169,6 @@ def q_learning(n_episodes=250,
                 agent.update_target_network()
         reward_per_episode.append(np.sum(rewards))
         
-        print("episode: ", i, " score: ", reward_per_episode[-1], " Epsilon: ", epsilon)
-        
         # Update Q network with or without ER buffer
         if ER_buffer:
             agent.ER_buffer.extend(episode)
@@ -180,9 +178,13 @@ def q_learning(n_episodes=250,
             agent.update(episode)
         
         # Decrease epsilon if exploration strategy is annealing epsilon-greedy    
-        if strategy=="epsilon" and epsilon_decay != 1:
+        if strategy == "epsilon" and epsilon_decay != 1:
+            print("episode: ", i, " score: ", reward_per_episode[-1], " Epsilon: ", epsilon)
+            
             if epsilon > epsilon_min:
                 epsilon = epsilon * epsilon_decay
+        else:
+            print("episode: ", i, " score: ", reward_per_episode[-1])
             
     env.close()
     return reward_per_episode
