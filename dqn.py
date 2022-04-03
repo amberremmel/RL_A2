@@ -1,3 +1,12 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Practical for course 'Reinforcement Learning',
+Leiden University, The Netherlands
+2022
+By Ricardo Michels, Paula Mieras, Amber Remmelzwaal
+"""
+
 import gym
 
 import random

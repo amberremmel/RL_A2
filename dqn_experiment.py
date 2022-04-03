@@ -3,8 +3,9 @@
 """
 Practical for course 'Reinforcement Learning',
 Leiden University, The Netherlands
-2021
+2022
 By Thomas Moerland
+Altered by Ricardo Michels, Paula Mieras, Amber Remmelzwaal
 """
 
 import numpy as np
@@ -135,7 +136,9 @@ def experiment(study):
                     smoothing_window)
             Plot.add_curve(learning_curve,label='# layers = {} '.format(len(n_nodes)))        
         Plot.save('dqn_result_n_layers={}.png'.format([len(n_nodes) for n_nodes in n_nodess]))    
-        
+
+        n_nodes = [32, 16]
+
         # Varying the replay buffer parameters
         Plot = LearningCurvePlot(title = 'Deep Q-network replay buffer')
         update_TN = False
