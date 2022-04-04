@@ -67,7 +67,7 @@ class DQN_agent:
             y = softmax(x, temp)
             z = random.random()
             for i, val in enumerate(y):
-                if z < val:
+                if z <= val:
                     a = i
                     break
                 else:
